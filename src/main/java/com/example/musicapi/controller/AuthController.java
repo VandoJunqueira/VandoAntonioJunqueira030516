@@ -1,20 +1,25 @@
 package com.example.musicapi.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.example.musicapi.dto.AuthRequest;
 import com.example.musicapi.dto.AuthResponse;
 import com.example.musicapi.dto.RegisterRequest;
 import com.example.musicapi.model.User;
 import com.example.musicapi.repository.UserRepository;
 import com.example.musicapi.security.JwtTokenProvider;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -52,14 +57,31 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Username is already taken!");
         }
 
+        User.Role role = User.Role.USER;
+        if (registerRequest.getRole() != null && !registerRequest.getRole().isEmpty()) {
+            try {
+                role = User.Role.valueOf(registerRequest.getRole().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid role and keep default
+            }
+        }
+
         User user = User.builder()
                 .username(registerRequest.getUsername())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
-                .role(User.Role.USER)
+                .role(role)
                 .build();
 
         userRepository.save(user);
 
         return ResponseEntity.ok("User registered successfully!");
+    }
+
+    @PostMapping("/refresh")
+    @Operation(summary = "Refresh JWT token")
+    public ResponseEntity<AuthResponse> refreshToken(Authentication authentication) {
+        String jwt = tokenProvider.generateToken(authentication);
+        long expiresIn = System.currentTimeMillis() + tokenProvider.getJwtExpirationMs();
+        return ResponseEntity.ok(new AuthResponse(jwt, expiresIn));
     }
 }

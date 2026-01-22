@@ -1,24 +1,12 @@
 package com.example.musicapi.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.example.musicapi.model.User;
 
-public class RegisterRequest {
+public class UserUpdateRequest {
 
-    @NotBlank
     private String username;
-    @NotBlank
     private String password;
-
-    private String role;
-
-    public RegisterRequest() {
-    }
-
-    public RegisterRequest(String username, String password, String role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-    }
+    private User.Role role;
 
     public String getUsername() {
         return username;
@@ -36,11 +24,11 @@ public class RegisterRequest {
         this.password = password;
     }
 
-    public String getRole() {
+    public User.Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(User.Role role) {
         this.role = role;
     }
 }
