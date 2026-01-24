@@ -1,7 +1,5 @@
 package com.example.musicapi.controller;
 
-import java.util.Map;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -18,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.musicapi.dto.ApiResponse;
 import com.example.musicapi.dto.ArtistRequest;
 import com.example.musicapi.model.Artist;
 import com.example.musicapi.service.ArtistService;
@@ -48,38 +47,62 @@ public class ArtistController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get artist by ID")
-    public ResponseEntity<Artist> getArtistById(@PathVariable Long id) {
-        return ResponseEntity.ok(artistService.findById(id));
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Artist>> getArtistById(@PathVariable Long id) {
+        try {
+            Artist artist = artistService.findById(id);
+            return ResponseEntity.ok(ApiResponse.success("Artista encontrado com sucesso", artist));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Artista não encontrado com ID: " + id));
+        }
     }
 
     @PostMapping
     @Operation(summary = "Create a new artist")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Artist> createArtist(@Valid @RequestBody ArtistRequest request) {
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Artist>> createArtist(@Valid @RequestBody ArtistRequest request) {
         Artist created = artistService.create(request);
-        return ResponseEntity.ok(created);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED)
+                .body(ApiResponse.success("Artista criado com sucesso", created));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an artist")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Artist> updateArtist(@PathVariable Long id, @Valid @RequestBody ArtistRequest request) {
-        return ResponseEntity.ok(artistService.update(id, request));
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Artist>> updateArtist(@PathVariable Long id, @Valid @RequestBody ArtistRequest request) {
+        try {
+            Artist updated = artistService.update(id, request);
+            return ResponseEntity.ok(ApiResponse.success("Artista atualizado com sucesso", updated));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Artista não encontrado com ID: " + id));
+        }
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an artist")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> deleteArtist(@PathVariable Long id) {
-        artistService.delete(id);
-        return ResponseEntity.ok(Map.of("success", true, "message", "Artist deleted successfully"));
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Void>> deleteArtist(@PathVariable Long id) {
+        try {
+            artistService.delete(id);
+            return ResponseEntity.ok(ApiResponse.success("Artista deletado com sucesso"));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Artista não encontrado com ID: " + id));
+        }
     }
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload artist image")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Artist> uploadImage(@PathVariable Long id,
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Artist>> uploadImage(@PathVariable Long id,
             @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(artistService.uploadImage(id, file));
+        try {
+            Artist artist = artistService.uploadImage(id, file);
+            return ResponseEntity.ok(ApiResponse.success("Imagem do artista enviada com sucesso", artist));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Erro ao enviar imagem: " + e.getMessage()));
+        }
     }
 }

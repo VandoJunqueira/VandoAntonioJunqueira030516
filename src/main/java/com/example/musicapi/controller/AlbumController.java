@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.musicapi.dto.AlbumRequest;
+import com.example.musicapi.dto.ApiResponse;
 import com.example.musicapi.model.Album;
 import com.example.musicapi.service.AlbumService;
 
@@ -44,52 +45,56 @@ public class AlbumController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get album by ID")
-    public ResponseEntity<Album> getAlbumById(@PathVariable Long id) {
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> getAlbumById(@PathVariable Long id) {
         try {
             Album album = albumService.findById(id);
-            return ResponseEntity.ok(album);
+            return ResponseEntity.ok(ApiResponse.success("Álbum encontrado com sucesso", album));
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Álbum não encontrado com ID: " + id));
         }
     }
 
     @PostMapping
     @Operation(summary = "Create a new album")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Album> createAlbum(@Valid @RequestBody AlbumRequest request) {
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> createAlbum(@Valid @RequestBody AlbumRequest request) {
         Album album = new Album();
         album.setTitle(request.getTitle());
         album.setReleaseYear(request.getReleaseYear());
 
-        Album created = albumService.create(album);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        Album created = albumService.create(album, request.getArtistIds());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Álbum criado com sucesso", created));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an album")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Album> updateAlbum(@PathVariable Long id, @Valid @RequestBody AlbumRequest request) {
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> updateAlbum(@PathVariable Long id, @Valid @RequestBody AlbumRequest request) {
         try {
             Album album = new Album();
             album.setTitle(request.getTitle());
             album.setReleaseYear(request.getReleaseYear());
 
-            Album updated = albumService.update(id, album);
-            return ResponseEntity.ok(updated);
+            Album updated = albumService.update(id, album, request.getArtistIds());
+            return ResponseEntity.ok(ApiResponse.success("Álbum atualizado com sucesso", updated));
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Álbum não encontrado com ID: " + id));
         }
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an album")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteAlbum(@PathVariable Long id) {
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Void>> deleteAlbum(@PathVariable Long id) {
         try {
             albumService.delete(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.success("Álbum deletado com sucesso"));
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Álbum não encontrado com ID: " + id));
         }
     }
 }

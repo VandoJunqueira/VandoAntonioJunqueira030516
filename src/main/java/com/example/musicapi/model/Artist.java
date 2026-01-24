@@ -1,15 +1,20 @@
 package com.example.musicapi.model;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,6 +35,10 @@ public class Artist {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @ManyToMany(mappedBy = "artists")
+    @JsonIgnore
+    private Set<Album> albums = new HashSet<>();
 
     public Artist() {
     }
@@ -80,5 +89,13 @@ public class Artist {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Set<Album> getAlbums() {
+        return albums;
+    }
+
+    public void setAlbums(Set<Album> albums) {
+        this.albums = albums;
     }
 }
