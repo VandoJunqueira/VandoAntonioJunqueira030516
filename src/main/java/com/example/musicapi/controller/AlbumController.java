@@ -20,6 +20,9 @@ import com.example.musicapi.model.Album;
 import com.example.musicapi.service.AlbumService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,7 +30,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/albums")
-@Tag(name = "Albums", description = "Management of Albums")
+@Tag(name = "Álbuns", description = "Gerenciamento de Álbuns")
 @SecurityRequirement(name = "bearerAuth")
 public class AlbumController {
 
@@ -38,13 +41,19 @@ public class AlbumController {
     }
 
     @GetMapping
-    @Operation(summary = "List all albums")
+    @Operation(summary = "Listar todos os álbuns")
     public ResponseEntity<Page<Album>> getAllAlbums(Pageable pageable) {
         return ResponseEntity.ok(albumService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get album by ID")
+    @Operation(summary = "Buscar álbum por ID")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Álbum encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Álbum não encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
     public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> getAlbumById(@PathVariable Long id) {
         try {
             Album album = albumService.findById(id);
@@ -56,8 +65,14 @@ public class AlbumController {
     }
 
     @PostMapping
-    @Operation(summary = "Create a new album")
+    @Operation(summary = "Criar um novo álbum")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Álbum criado com sucesso",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dados inválidos",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
     public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> createAlbum(@Valid @RequestBody AlbumRequest request) {
         Album album = new Album();
         album.setTitle(request.getTitle());
@@ -69,8 +84,16 @@ public class AlbumController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an album")
+    @Operation(summary = "Atualizar um álbum")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Álbum atualizado com sucesso",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Álbum não encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dados inválidos",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
     public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> updateAlbum(@PathVariable Long id, @Valid @RequestBody AlbumRequest request) {
         try {
             Album album = new Album();
@@ -86,8 +109,14 @@ public class AlbumController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete an album")
+    @Operation(summary = "Deletar um álbum")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Álbum deletado com sucesso",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Álbum não encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
     public ResponseEntity<com.example.musicapi.dto.ApiResponse<Void>> deleteAlbum(@PathVariable Long id) {
         try {
             albumService.delete(id);

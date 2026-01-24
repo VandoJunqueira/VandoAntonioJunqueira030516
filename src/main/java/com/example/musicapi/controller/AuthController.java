@@ -23,7 +23,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@Tag(name = "Authentication", description = "Endpoints for Login and Registration")
+@Tag(name = "Autenticação", description = "Endpoints para Login e Registro")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -40,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Authenticate user and return JWT")
+    @Operation(summary = "Autenticar usuário e retornar JWT")
     public ResponseEntity<AuthResponse> authenticateUser(@Valid @RequestBody AuthRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -51,7 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    @Operation(summary = "Register a new user")
+    @Operation(summary = "Registrar um novo usuário")
     public ResponseEntity<String> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username is already taken!");
@@ -78,7 +78,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "Refresh JWT token")
+    @Operation(summary = "Atualizar token JWT")
     public ResponseEntity<AuthResponse> refreshToken(Authentication authentication) {
         String jwt = tokenProvider.generateToken(authentication);
         long expiresIn = System.currentTimeMillis() + tokenProvider.getJwtExpirationMs();
