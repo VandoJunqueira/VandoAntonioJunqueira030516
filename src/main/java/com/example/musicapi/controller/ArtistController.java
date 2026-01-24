@@ -1,16 +1,22 @@
 package com.example.musicapi.controller;
 
+import java.util.Map;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.musicapi.model.Artist;
 import com.example.musicapi.service.ArtistService;
@@ -50,5 +56,28 @@ public class ArtistController {
     public ResponseEntity<Artist> createArtist(@RequestBody Artist artist) {
         Artist created = artistService.create(artist);
         return ResponseEntity.ok(created);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update an artist")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Artist> updateArtist(@PathVariable Long id, @RequestBody Artist artist) {
+        return ResponseEntity.ok(artistService.update(id, artist));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an artist")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> deleteArtist(@PathVariable Long id) {
+        artistService.delete(id);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Artist deleted successfully"));
+    }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload artist image")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Artist> uploadImage(@PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(artistService.uploadImage(id, file));
     }
 }
