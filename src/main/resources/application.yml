@@ -30,6 +30,7 @@ app:
     access-key: minioadmin
     secret-key: minioadmin
     bucket-artists: artists
+    bucket-albums: albums
 
 ---
 spring:

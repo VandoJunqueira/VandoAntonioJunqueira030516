@@ -43,7 +43,7 @@ public class ArtistService {
 
     public Artist findById(Long id) {
         Artist artist = artistRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Artist not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Artista não encontrado com ID: " + id));
         enrichArtistWithUrl(artist);
         return artist;
     }
@@ -64,7 +64,7 @@ public class ArtistService {
 
     public void delete(Long id) {
         if (!artistRepository.existsById(id)) {
-            throw new EntityNotFoundException("Artist not found with id: " + id);
+            throw new EntityNotFoundException("Artista não encontrado com ID: " + id);
         }
         artistRepository.deleteById(id);
     }

@@ -44,8 +44,10 @@ services:
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/artists; 
+      /usr/bin/mc mb myminio/artists;
+      /usr/bin/mc mb myminio/albums; 
       /usr/bin/mc anonymous set public myminio/artists;
+      /usr/bin/mc anonymous set public myminio/albums;
       exit 0;
       "
 

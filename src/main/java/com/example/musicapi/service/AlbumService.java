@@ -4,9 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.musicapi.model.Album;
 import com.example.musicapi.model.Artist;
@@ -20,14 +22,21 @@ public class AlbumService {
 
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
+    private final FileStorageService fileStorageService;
 
-    public AlbumService(AlbumRepository albumRepository, ArtistRepository artistRepository) {
+    @Value("${app.minio.bucket-albums}")
+    private String albumBucket;
+
+    public AlbumService(AlbumRepository albumRepository, ArtistRepository artistRepository,
+            FileStorageService fileStorageService) {
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     public Page<Album> findAll(Pageable pageable) {
         Page<Album> page = albumRepository.findAll(pageable);
+        page.forEach(this::enrichAlbumWithUrl);
         return page;
     }
 
@@ -36,6 +45,8 @@ public class AlbumService {
             Set<Artist> artists = new HashSet<>(artistRepository.findAllById(artistIds));
             album.setArtists(artists);
         }
+
+        enrichAlbumWithUrl(album);
         return albumRepository.save(album);
     }
 
@@ -56,11 +67,55 @@ public class AlbumService {
             album.setArtists(artists);
         }
 
+        enrichAlbumWithUrl(album);
         return albumRepository.save(album);
     }
 
     public void delete(Long id) {
         Album album = findById(id);
         albumRepository.delete(album);
+    }
+
+    public Album addArtistToAlbum(Long albumId, Long artistId) {
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new EntityNotFoundException("Álbum não encontrado com ID: " + albumId));
+        Artist artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new EntityNotFoundException("Artista não encontrado com ID: " + artistId));
+
+        if (!album.getArtists().contains(artist)) {
+            album.getArtists().add(artist);
+            album = albumRepository.save(album);
+        }
+        enrichAlbumWithUrl(album);
+        return album;
+    }
+
+    public Album removeArtistFromAlbum(Long albumId, Long artistId) {
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new EntityNotFoundException("Álbum não encontrado com ID: " + albumId));
+        Artist artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new EntityNotFoundException("Artista não encontrado com ID: " + artistId));
+
+        album.getArtists().remove(artist);
+        album = albumRepository.save(album);
+        enrichAlbumWithUrl(album);
+        return album;
+    }
+
+    public Album uploadCover(Long id, MultipartFile file) {
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Álbum não encontrado com ID: " + id));
+        String fileName = fileStorageService.uploadFile(file, albumBucket);
+        album.setCoverUrl(fileName);
+        albumRepository.save(album);
+        enrichAlbumWithUrl(album);
+        return album;
+    }
+
+    private void enrichAlbumWithUrl(Album album) {
+        if (album.getCoverUrl() != null && !album.getCoverUrl().startsWith("http")) {
+            String url = fileStorageService.getPresignedUrl(album.getCoverUrl(), albumBucket);
+            album.setCoverUrl(url);
+        }
     }
 }

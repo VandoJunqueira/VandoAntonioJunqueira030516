@@ -3,6 +3,7 @@ package com.example.musicapi.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.musicapi.dto.AlbumRequest;
 import com.example.musicapi.dto.ApiResponse;
@@ -124,6 +127,70 @@ public class AlbumController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("Álbum não encontrado com ID: " + id));
+        }
+    }
+
+    @PostMapping("/{albumId}/artists/{artistId}")
+    @Operation(summary = "Adicionar um artista a um álbum existente")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Artista adicionado ao álbum com sucesso",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Álbum ou artista não encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> addArtistToAlbum(@PathVariable Long albumId, @PathVariable Long artistId) {
+        try {
+            Album album = albumService.addArtistToAlbum(albumId, artistId);
+            return ResponseEntity.ok(ApiResponse.success("Artista adicionado ao álbum com sucesso", album));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{albumId}/artists/{artistId}")
+    @Operation(summary = "Remover um artista de um álbum existente")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Artista removido do álbum com sucesso",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Álbum ou artista não encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> removeArtistFromAlbum(@PathVariable Long albumId, @PathVariable Long artistId) {
+        try {
+            Album album = albumService.removeArtistFromAlbum(albumId, artistId);
+            return ResponseEntity.ok(ApiResponse.success("Artista removido do álbum com sucesso", album));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload da capa do álbum")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Capa do álbum enviada com sucesso",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Álbum não encontrado",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Arquivo inválido",
+                content = @Content(schema = @Schema(implementation = com.example.musicapi.dto.ApiResponse.class)))
+    })
+    public ResponseEntity<com.example.musicapi.dto.ApiResponse<Album>> uploadCover(@PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            Album album = albumService.uploadCover(id, file);
+            return ResponseEntity.ok(ApiResponse.success("Capa do álbum enviada com sucesso", album));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Erro ao enviar capa: " + e.getMessage()));
         }
     }
 }
