@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.musicapi.dto.ArtistRequest;
 import com.example.musicapi.model.Artist;
 import com.example.musicapi.repository.ArtistRepository;
 
@@ -47,13 +48,15 @@ public class ArtistService {
         return artist;
     }
 
-    public Artist create(Artist artist) {
+    public Artist create(ArtistRequest request) {
+        Artist artist = new Artist();
+        artist.setName(request.getName());
         return artistRepository.save(artist);
     }
 
-    public Artist update(Long id, Artist artistDetails) {
+    public Artist update(Long id, ArtistRequest request) {
         Artist artist = findById(id);
-        artist.setName(artistDetails.getName());
+        artist.setName(request.getName());
         artistRepository.save(artist);
         enrichArtistWithUrl(artist);
         return artist;

@@ -18,12 +18,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.musicapi.dto.ArtistRequest;
 import com.example.musicapi.model.Artist;
 import com.example.musicapi.service.ArtistService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/artists")
@@ -53,16 +55,16 @@ public class ArtistController {
     @PostMapping
     @Operation(summary = "Create a new artist")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Artist> createArtist(@RequestBody Artist artist) {
-        Artist created = artistService.create(artist);
+    public ResponseEntity<Artist> createArtist(@Valid @RequestBody ArtistRequest request) {
+        Artist created = artistService.create(request);
         return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an artist")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Artist> updateArtist(@PathVariable Long id, @RequestBody Artist artist) {
-        return ResponseEntity.ok(artistService.update(id, artist));
+    public ResponseEntity<Artist> updateArtist(@PathVariable Long id, @Valid @RequestBody ArtistRequest request) {
+        return ResponseEntity.ok(artistService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
