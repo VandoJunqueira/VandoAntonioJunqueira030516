@@ -5,16 +5,24 @@ public class AuthResponse {
     private String accessToken;
     private String tokenType = "Bearer";
     private long expiresIn;
+    private UserResponse user;
 
     public AuthResponse(String accessToken, long expiresIn) {
         this.accessToken = accessToken;
         this.expiresIn = expiresIn;
     }
 
-    public AuthResponse(String accessToken, String tokenType, long expiresIn) {
+    public AuthResponse(String accessToken, long expiresIn, UserResponse user) {
+        this.accessToken = accessToken;
+        this.expiresIn = expiresIn;
+        this.user = user;
+    }
+
+    public AuthResponse(String accessToken, String tokenType, long expiresIn, UserResponse user) {
         this.accessToken = accessToken;
         this.tokenType = tokenType;
         this.expiresIn = expiresIn;
+        this.user = user;
     }
 
     public String getAccessToken() {
@@ -39,5 +47,13 @@ public class AuthResponse {
 
     public void setExpiresIn(long expiresIn) {
         this.expiresIn = expiresIn;
+    }
+
+    public UserResponse getUser() {
+        return user;
+    }
+
+    public void setUser(UserResponse user) {
+        this.user = user;
     }
 }

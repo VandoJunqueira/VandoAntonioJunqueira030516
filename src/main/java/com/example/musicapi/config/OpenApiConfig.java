@@ -14,7 +14,7 @@ public class OpenApiConfig {
     public OpenAPI musicOpenAPI() {
         return new OpenAPI()
                 .info(new Info().title("Music API")
-                        .description("API for managing Artists and Albums")
+                        .description("API para gerenciar Artistas e Álbuns")
                         .version("v1.0"))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth",
