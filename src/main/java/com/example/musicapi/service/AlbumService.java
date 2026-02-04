@@ -27,11 +27,14 @@ public class AlbumService {
     @Value("${app.minio.bucket-albums}")
     private String albumBucket;
 
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     public AlbumService(AlbumRepository albumRepository, ArtistRepository artistRepository,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService, org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate) {
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.fileStorageService = fileStorageService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     public Page<Album> findAll(Pageable pageable) {
@@ -47,7 +50,9 @@ public class AlbumService {
         }
 
         enrichAlbumWithUrl(album);
-        return albumRepository.save(album);
+        Album savedAlbum = albumRepository.save(album);
+        messagingTemplate.convertAndSend("/topic/albums", savedAlbum);
+        return savedAlbum;
     }
 
     public Album findById(Long id) {
