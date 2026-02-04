@@ -19,9 +19,9 @@ public class RegionalService {
     private final RegionalRepository regionalRepository;
     private final RestTemplate restTemplate;
 
-    public RegionalService(RegionalRepository regionalRepository) {
+    public RegionalService(RegionalRepository regionalRepository, RestTemplate restTemplate) {
         this.regionalRepository = regionalRepository;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     public List<Regional> findAllSynced() {
