@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Teste</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+
+<body>
+    <h2>WebSocket Teste - Albums</h2>
+    <div id="messages"></div>
+
+    <script type="text/javascript">
+        var stompClient = null;
+
+        function connect() {
+            var socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                showMessage("Connected to WebSocket");
+                stompClient.subscribe('/topic/albums', function (message) {
+                    showMessage("Received Album: " + message.body);
+                });
+            }, function (error) {
+                console.log('STOMP error ' + error);
+                showMessage("Error: " + error);
+            });
+        }
+
+        function showMessage(message) {
+            var response = document.getElementById('messages');
+            var p = document.createElement('p');
+            p.style.wordWrap = 'break-word';
+            p.appendChild(document.createTextNode(message));
+            response.appendChild(p);
+        }
+
+        connect();
+    </script>
+</body>
+
+</html>
