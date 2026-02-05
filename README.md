@@ -16,6 +16,7 @@ Este projeto é uma API REST para gerenciamento de Artistas e Álbuns, implement
 - **Armazenamento**: MinIO para upload de imagens (Imagens de Artistas, Capas de Álbuns).
 - **Observabilidade**: Health Checks do Actuator, Rate Limiting (Filtro).
 - **Documentação**: Swagger UI (`/swagger-ui.html`).
+- **WebSocket**: Comunicação em tempo real via STOMP/SockJS (Endpoint `/ws`).
 
 ## Pré-requisitos
 - **Java 17+**
@@ -42,6 +43,15 @@ mvn spring-boot:run
 ### 3. Acessar a API
 - **Swagger UI**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 - **Console do MinIO**: [http://localhost:9001](http://localhost:9001) (Usuário: `minioadmin`, Senha: `minioadmin`)
+- **WebSocket Client**: [http://localhost:8080/index.html](http://localhost:8080/index.html) (Para testar conexão WebSocket e visualizar mensagens do tópico `/topic/albums`).
+
+### 4. Executando Testes
+O projeto inclui testes unitários (JUnit 5 + Mockito) para a camada de serviço.
+
+**Via Terminal:**
+```bash
+mvn test
+```
 
 ## Estrutura de Dados
 
@@ -79,7 +89,7 @@ Tabela associativa para relacionamento N:N entre artistas e álbuns.
 Armazena as regionais cadastradas no sistema.
 | Coluna | Tipo | Descrição |
 | :--- | :--- | :--- |
-| `id` | `SERIAL` | Chave primária auto-incrementada. |
+| `id` | `BIGSERIAL` | Chave primária auto-incrementada. |
 | `nome` | `VARCHAR(200)` | Nome da regional. |
 | `ativo` | `BOOLEAN` | Status de ativação (Default: TRUE). |
 | `external_id` | `INTEGER` | ID externo para integração. |
@@ -92,3 +102,30 @@ Gerencia autenticação e autorização.
 | `username` | `VARCHAR(255)` | Login do usuário (Único). |
 | `password` | `VARCHAR(255)` | Senha criptografada (BCrypt). |
 | `role` | `VARCHAR(50) ` | Papel de acesso (USER, ADMIN). |
+
+## Arquitetura de Solução
+
+### Decisões Técnicas
+1. **Framework e Linguagem**:
+   - **Spring Boot 3 + Java 17**: Escolhidos pela robustez, maturidade e suporte nativo a containers (Docker).
+   - **Maven**: Gerenciamento de dependências padrão de mercado.
+
+2. **Banco de Dados e Persistência**:
+   - **PostgreSQL**: Banco relacional robusto para ambiente de produção.
+   - **H2 Database**: Banco em memória para testes rápidos, garantindo que o desenvolvimento não dependa de infra pesada.
+   - **Flyway**: Versionamento de schema. Garante que qualquer desenvolvedor tenha o banco no estado correto apenas rodando a aplicação.
+
+3. **Armazenamento de Arquivos**:
+   - **MinIO**: Solução de Object Storage compatível com AWS S3. Permite testar localmente toda a lógica de upload e presigned URLs sem custos de nuvem.
+
+4. **Segurança**:
+   - **JWT (Stateless)**: Escalável horizontalmente, pois não mantém sessão no servidor.
+   - **BCrypt**: Padrão para hash de senhas.
+
+5. **Performance e Escalabilidade**:
+   - **WebSockets (STOMP)**: Comunicação em tempo real eficiente para notificações.
+
+### Padrões de Projeto (Design Patterns)
+- **Controller-Service-Repository**: Separação clara de responsabilidades.
+- **DTOs (Data Transfer Objects)**: Evita expor as entidades do banco diretamente na API.
+- **Strategy/Adapter**: O `FileStorageService` abstrai a implementação de storage, permitindo trocar entre S3, MinIO ou Disco Local facilmente.
